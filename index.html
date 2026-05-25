@@ -3,1602 +3,1298 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VELO — Локальное такси в Даугавпилсе</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<title>A2B Taxi — Новый стандарт такси в Даугавпилсе</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0a0b0f;
-    --bg2: #0f1018;
-    --surface: #13151f;
-    --surface2: #1a1d2e;
-    --border: rgba(255,255,255,0.06);
-    --gold: #f0c040;
-    --gold2: #e8a800;
-    --gold-dim: rgba(240,192,64,0.15);
-    --text: #f0ece4;
-    --text-dim: rgba(240,236,228,0.55);
-    --text-muted: rgba(240,236,228,0.3);
-    --blue: #1e2a4a;
-    --blue-accent: #2a3d6b;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  html { scroll-behavior: smooth; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 16px;
-    line-height: 1.6;
-    overflow-x: hidden;
-  }
-
-  /* NOISE TEXTURE */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 999;
-    opacity: 0.4;
-  }
-
-  /* ===== NAV ===== */
-  nav {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    z-index: 100;
-    padding: 20px 40px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: linear-gradient(to bottom, rgba(10,11,15,0.95) 0%, transparent 100%);
-    backdrop-filter: blur(4px);
-  }
-
-  .logo {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 28px;
-    font-weight: 700;
-    letter-spacing: 6px;
-    color: var(--gold);
-    text-decoration: none;
-    text-transform: uppercase;
-  }
-
-  .logo span { color: var(--text); }
-
-  .nav-links {
-    display: flex;
-    gap: 32px;
-    list-style: none;
-  }
-
-  .nav-links a {
-    color: var(--text-dim);
-    text-decoration: none;
-    font-size: 13px;
-    font-weight: 500;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    transition: color 0.3s;
-  }
-
-  .nav-links a:hover { color: var(--gold); }
-
-  .nav-cta {
-    background: var(--gold);
-    color: var(--bg) !important;
-    padding: 10px 24px;
-    border-radius: 2px;
-    font-weight: 600 !important;
-    transition: opacity 0.3s !important;
-  }
-
-  .nav-cta:hover { opacity: 0.85; color: var(--bg) !important; }
-
-  /* ===== HERO ===== */
-  #hero {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    padding: 0 40px 80px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .hero-bg {
-    position: absolute;
-    inset: 0;
-    background:
-      radial-gradient(ellipse 60% 50% at 70% 30%, rgba(30,42,74,0.7) 0%, transparent 70%),
-      radial-gradient(ellipse 40% 40% at 20% 80%, rgba(240,192,64,0.06) 0%, transparent 60%),
-      linear-gradient(160deg, #0a0b0f 0%, #0d0f1a 50%, #0a0b0f 100%);
-  }
-
-  .hero-grid {
-    position: absolute;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-    background-size: 80px 80px;
-    mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.5) 40%, rgba(0,0,0,0.2) 100%);
-  }
-
-  .hero-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--gold-dim);
-    border: 1px solid rgba(240,192,64,0.25);
-    color: var(--gold);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    padding: 8px 16px;
-    border-radius: 2px;
-    margin-bottom: 28px;
-    width: fit-content;
-    position: relative;
-    z-index: 1;
-  }
-
-  .hero-badge::before {
-    content: '';
-    width: 6px; height: 6px;
-    background: var(--gold);
-    border-radius: 50%;
-    animation: pulse 2s infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.5; transform: scale(0.7); }
-  }
-
-  .hero-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(48px, 8vw, 112px);
-    font-weight: 300;
-    line-height: 0.92;
-    letter-spacing: -2px;
-    position: relative;
-    z-index: 1;
-    margin-bottom: 32px;
-    max-width: 900px;
-  }
-
-  .hero-title em {
-    font-style: italic;
-    color: var(--gold);
-  }
-
-  .hero-sub {
-    font-size: 17px;
-    line-height: 1.65;
-    color: var(--text-dim);
-    max-width: 540px;
-    position: relative;
-    z-index: 1;
-    margin-bottom: 48px;
-    font-weight: 300;
-  }
-
-  .hero-sub strong {
-    color: var(--text);
-    font-weight: 500;
-  }
-
-  .hero-actions {
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-    position: relative;
-    z-index: 1;
-  }
-
-  .btn-primary {
-    background: var(--gold);
-    color: var(--bg);
-    padding: 16px 36px;
-    border: none;
-    border-radius: 2px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    font-weight: 600;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    cursor: pointer;
-    text-decoration: none;
-    display: inline-block;
-    transition: all 0.3s;
-  }
-
-  .btn-primary:hover {
-    background: #fff;
-    transform: translateY(-2px);
-    box-shadow: 0 12px 40px rgba(240,192,64,0.3);
-  }
-
-  .btn-outline {
-    background: transparent;
-    color: var(--text);
-    padding: 15px 36px;
-    border: 1px solid var(--border);
-    border-radius: 2px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    cursor: pointer;
-    text-decoration: none;
-    display: inline-block;
-    transition: all 0.3s;
-  }
-
-  .btn-outline:hover {
-    border-color: var(--gold);
-    color: var(--gold);
-  }
-
-  .hero-stats {
-    position: absolute;
-    right: 60px;
-    bottom: 80px;
-    display: flex;
-    flex-direction: column;
-    gap: 32px;
-    z-index: 1;
-  }
-
-  .stat {
-    text-align: right;
-  }
-
-  .stat-num {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 52px;
-    font-weight: 600;
-    color: var(--gold);
-    line-height: 1;
-  }
-
-  .stat-label {
-    font-size: 12px;
-    color: var(--text-dim);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    margin-top: 4px;
-  }
-
-  .hero-line {
-    position: absolute;
-    right: 0;
-    top: 30%;
-    width: 1px;
-    height: 40%;
-    background: linear-gradient(to bottom, transparent, var(--gold), transparent);
-    opacity: 0.3;
-  }
-
-  /* ===== SECTIONS ===== */
-  section {
-    padding: 120px 40px;
-  }
-
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
-  .section-label {
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--gold);
-    margin-bottom: 20px;
-  }
-
-  .section-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(36px, 5vw, 68px);
-    font-weight: 400;
-    line-height: 1.05;
-    letter-spacing: -1px;
-    margin-bottom: 24px;
-  }
-
-  .section-text {
-    font-size: 16px;
-    color: var(--text-dim);
-    max-width: 560px;
-    line-height: 1.75;
-    font-weight: 300;
-  }
-
-  /* ===== DRIVERS SECTION ===== */
-  #drivers {
-    background: var(--bg2);
-    position: relative;
-    overflow: hidden;
-  }
-
-  #drivers::before {
-    content: '';
-    position: absolute;
-    top: -200px; right: -200px;
-    width: 600px; height: 600px;
-    background: radial-gradient(circle, rgba(30,42,74,0.6) 0%, transparent 70%);
-    pointer-events: none;
-  }
-
-  .drivers-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 80px;
-    align-items: start;
-    margin-top: 60px;
-  }
-
-  .commission-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 48px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .commission-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--gold), transparent);
-  }
-
-  .commission-big {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 96px;
-    font-weight: 700;
-    color: var(--gold);
-    line-height: 1;
-    margin-bottom: 8px;
-  }
-
-  .commission-label {
-    font-size: 14px;
-    color: var(--text-dim);
-    margin-bottom: 32px;
-    font-weight: 300;
-  }
-
-  .vs-row {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    margin-bottom: 8px;
-  }
-
-  .vs-item {
-    flex: 1;
-    text-align: center;
-  }
-
-  .vs-num {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 36px;
-    font-weight: 600;
-    line-height: 1;
-  }
-
-  .vs-num.green { color: var(--gold); }
-  .vs-num.red { color: rgba(255,255,255,0.3); text-decoration: line-through; }
-
-  .vs-sep {
-    font-size: 12px;
-    color: var(--text-muted);
-    letter-spacing: 2px;
-  }
-
-  .vs-label {
-    font-size: 11px;
-    color: var(--text-muted);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    margin-top: 4px;
-  }
-
-  .features-list {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    margin-top: 40px;
-  }
-
-  .features-list li {
-    display: flex;
-    align-items: flex-start;
-    gap: 16px;
-    font-size: 15px;
-    color: var(--text-dim);
-    font-weight: 300;
-    line-height: 1.5;
-  }
-
-  .feature-icon {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: var(--gold-dim);
-    border: 1px solid rgba(240,192,64,0.3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    margin-top: 2px;
-  }
-
-  .feature-icon svg {
-    width: 10px; height: 10px;
-    fill: var(--gold);
-  }
-
-  /* ===== PASSENGERS ===== */
-  #passengers {
-    position: relative;
-    overflow: hidden;
-  }
-
-  #passengers::after {
-    content: '';
-    position: absolute;
-    bottom: -300px; left: -200px;
-    width: 700px; height: 700px;
-    background: radial-gradient(circle, rgba(240,192,64,0.04) 0%, transparent 70%);
-    pointer-events: none;
-  }
-
-  .comfort-cards {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2px;
-    margin-top: 60px;
-    background: var(--border);
-    border-radius: 4px;
-    overflow: hidden;
-  }
-
-  .comfort-card {
-    background: var(--bg2);
-    padding: 40px 32px;
-    transition: background 0.3s;
-  }
-
-  .comfort-card:hover {
-    background: var(--surface);
-  }
-
-  .comfort-num {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 48px;
-    font-weight: 300;
-    color: rgba(240,192,64,0.2);
-    line-height: 1;
-    margin-bottom: 16px;
-  }
-
-  .comfort-title {
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 10px;
-    color: var(--text);
-  }
-
-  .comfort-text {
-    font-size: 13px;
-    color: var(--text-muted);
-    line-height: 1.6;
-    font-weight: 300;
-  }
-
-  /* ===== WHY DGV ===== */
-  #why-dgv {
-    background: var(--surface);
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .why-inner {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 80px;
-    align-items: center;
-  }
-
-  .city-visual {
-    position: relative;
-    height: 340px;
-    border-radius: 4px;
-    overflow: hidden;
-    background: var(--surface2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .city-svg {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    inset: 0;
-  }
-
-  /* ===== MODEL ===== */
-  #model {
-    background: var(--bg);
-  }
-
-  .model-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 2px;
-    margin-top: 60px;
-    background: var(--border);
-    border-radius: 4px;
-    overflow: hidden;
-  }
-
-  .model-card {
-    background: var(--bg2);
-    padding: 40px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .model-card.featured {
-    background: var(--surface);
-    grid-column: span 2;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 40px;
-    align-items: center;
-  }
-
-  .model-card.featured::before {
-    content: '';
-    position: absolute;
-    left: 0; top: 0; bottom: 0;
-    width: 2px;
-    background: var(--gold);
-  }
-
-  .model-icon {
-    font-size: 32px;
-    margin-bottom: 20px;
-    opacity: 0.8;
-  }
-
-  .model-title {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 12px;
-  }
-
-  .model-text {
-    font-size: 14px;
-    color: var(--text-dim);
-    line-height: 1.7;
-    font-weight: 300;
-  }
-
-  /* ===== STANDARDS ===== */
-  #standards {
-    background: var(--bg2);
-  }
-
-  .standards-list {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1px;
-    margin-top: 60px;
-    background: var(--border);
-    border-radius: 4px;
-    overflow: hidden;
-  }
-
-  .standard-item {
-    background: var(--bg2);
-    padding: 32px 36px;
-    display: flex;
-    align-items: flex-start;
-    gap: 20px;
-    transition: background 0.3s;
-  }
-
-  .standard-item:hover { background: var(--surface); }
-
-  .std-num {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 36px;
-    font-weight: 300;
-    color: var(--gold);
-    opacity: 0.4;
-    line-height: 1;
-    flex-shrink: 0;
-    width: 48px;
-  }
-
-  .std-content {}
-  .std-title {
-    font-size: 15px;
-    font-weight: 600;
-    margin-bottom: 6px;
-  }
-
-  .std-text {
-    font-size: 13px;
-    color: var(--text-muted);
-    line-height: 1.6;
-    font-weight: 300;
-  }
-
-  /* ===== HOW TO START ===== */
-  #start {
-    background: var(--surface);
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .steps-row {
-    display: flex;
-    gap: 0;
-    margin-top: 60px;
-    position: relative;
-  }
-
-  .steps-row::before {
-    content: '';
-    position: absolute;
-    top: 32px; left: 32px; right: 32px;
-    height: 1px;
-    background: linear-gradient(90deg, var(--gold), rgba(240,192,64,0.1));
-    z-index: 0;
-  }
-
-  .step {
-    flex: 1;
-    padding: 0 24px;
-    position: relative;
-    z-index: 1;
-  }
-
-  .step-num {
-    width: 64px; height: 64px;
-    border-radius: 50%;
-    background: var(--bg);
-    border: 1px solid var(--gold);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 24px;
-    font-weight: 600;
-    color: var(--gold);
-    margin-bottom: 24px;
-  }
-
-  .step-title {
-    font-size: 15px;
-    font-weight: 600;
-    margin-bottom: 8px;
-  }
-
-  .step-text {
-    font-size: 13px;
-    color: var(--text-muted);
-    line-height: 1.6;
-    font-weight: 300;
-  }
-
-  /* ===== PASSENGERS CTA ===== */
-  #passengers-cta {
-    background: var(--blue);
-    position: relative;
-    overflow: hidden;
-    text-align: center;
-    padding: 100px 40px;
-  }
-
-  #passengers-cta::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(240,192,64,0.08) 0%, transparent 70%);
-  }
-
-  /* ===== FAQ ===== */
-  #faq {
-    background: var(--bg);
-  }
-
-  .faq-list {
-    max-width: 720px;
-    margin: 60px auto 0;
-  }
-
-  .faq-item {
-    border-bottom: 1px solid var(--border);
-    overflow: hidden;
-  }
-
-  .faq-q {
-    width: 100%;
-    background: none;
-    border: none;
-    text-align: left;
-    padding: 28px 0;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 16px;
-    font-weight: 500;
-    color: var(--text);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 20px;
-    transition: color 0.3s;
-  }
-
-  .faq-q:hover { color: var(--gold); }
-
-  .faq-chevron {
-    width: 20px; height: 20px;
-    border-radius: 50%;
-    border: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    transition: all 0.3s;
-  }
-
-  .faq-item.open .faq-chevron {
-    background: var(--gold);
-    border-color: var(--gold);
-    transform: rotate(45deg);
-  }
-
-  .faq-a {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.4s ease;
-  }
-
-  .faq-item.open .faq-a { max-height: 200px; }
-
-  .faq-a-inner {
-    font-size: 14px;
-    color: var(--text-dim);
-    line-height: 1.75;
-    padding-bottom: 24px;
-    font-weight: 300;
-  }
-
-  /* ===== FORM ===== */
-  #form-section {
-    background: var(--surface);
-    border-top: 1px solid var(--border);
-  }
-
-  .form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 80px;
-    align-items: start;
-  }
-
-  .form-desc .section-title { max-width: 420px; }
-
-  .form-el {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
-
-  .form-el input,
-  .form-el select,
-  .form-el textarea {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 2px;
-    padding: 14px 18px;
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    outline: none;
-    transition: border-color 0.3s;
-    width: 100%;
-    -webkit-appearance: none;
-  }
-
-  .form-el input:focus,
-  .form-el select:focus,
-  .form-el textarea:focus {
-    border-color: rgba(240,192,64,0.4);
-  }
-
-  .form-el input::placeholder,
-  .form-el textarea::placeholder {
-    color: var(--text-muted);
-  }
-
-  .form-el select option { background: var(--bg); }
-
-  .form-el textarea {
-    resize: vertical;
-    min-height: 100px;
-    font-weight: 300;
-  }
-
-  /* ===== FINAL CTA ===== */
-  #final-cta {
-    background: var(--bg);
-    padding: 160px 40px;
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-  }
-
-  #final-cta::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background:
-      radial-gradient(ellipse 80% 60% at 50% 50%, rgba(30,42,74,0.8) 0%, transparent 70%);
-  }
-
-  #final-cta .section-title {
-    font-size: clamp(42px, 7vw, 96px);
-    position: relative;
-    z-index: 1;
-    max-width: 800px;
-    margin: 0 auto 24px;
-  }
-
-  #final-cta .section-text {
-    position: relative;
-    z-index: 1;
-    max-width: 480px;
-    margin: 0 auto 48px;
-    font-size: 17px;
-  }
-
-  #final-cta .hero-actions {
-    justify-content: center;
-    position: relative;
-    z-index: 1;
-  }
-
-  /* ===== FOOTER ===== */
-  footer {
-    background: var(--bg);
-    border-top: 1px solid var(--border);
-    padding: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .footer-logo {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 22px;
-    font-weight: 700;
-    letter-spacing: 5px;
-    color: var(--gold);
-    text-transform: uppercase;
-  }
-
-  .footer-text {
-    font-size: 12px;
-    color: var(--text-muted);
-    letter-spacing: 0.5px;
-  }
-
-  /* ===== SUCCESS ===== */
-  .success-msg {
-    display: none;
-    background: rgba(240,192,64,0.1);
-    border: 1px solid rgba(240,192,64,0.3);
-    border-radius: 2px;
-    padding: 16px 20px;
-    color: var(--gold);
-    font-size: 14px;
-    font-weight: 500;
-    text-align: center;
-  }
-
-  /* ===== MOBILE ===== */
-  .mobile-menu-btn {
-    display: none;
-    background: none;
-    border: none;
-    cursor: pointer;
-    flex-direction: column;
-    gap: 5px;
-    padding: 8px;
-  }
-
-  .mobile-menu-btn span {
-    display: block;
-    width: 22px; height: 1.5px;
-    background: var(--text);
-    transition: 0.3s;
-  }
-
-  @media (max-width: 900px) {
-    nav { padding: 16px 20px; }
-    .nav-links { display: none; }
-    .mobile-menu-btn { display: flex; }
-
-    #hero { padding: 120px 20px 60px; min-height: 100svh; }
-    .hero-stats { display: none; }
-    .hero-title { font-size: clamp(40px, 10vw, 64px); }
-    .hero-actions { flex-direction: column; }
-    .btn-primary, .btn-outline { text-align: center; }
-
-    section { padding: 80px 20px; }
-
-    .drivers-grid { grid-template-columns: 1fr; gap: 40px; }
-    .comfort-cards { grid-template-columns: 1fr; }
-    .why-inner { grid-template-columns: 1fr; gap: 40px; }
-    .city-visual { height: 200px; }
-    .model-grid { grid-template-columns: 1fr; }
-    .model-card.featured { grid-column: span 1; grid-template-columns: 1fr; }
-    .standards-list { grid-template-columns: 1fr; }
-    .steps-row { flex-direction: column; gap: 32px; }
-    .steps-row::before { display: none; }
-    .step { padding: 0; }
-    .form-grid { grid-template-columns: 1fr; gap: 40px; }
-    .form-row { grid-template-columns: 1fr; }
-    footer { flex-direction: column; gap: 12px; text-align: center; }
-    #final-cta { padding: 100px 20px; }
-    #final-cta .hero-actions { flex-direction: column; align-items: center; }
-  }
-
-  /* Reveal animations */
-  .reveal {
-    opacity: 0;
-    transform: translateY(30px);
-    transition: opacity 0.7s ease, transform 0.7s ease;
-  }
-
-  .reveal.visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  .reveal-delay-1 { transition-delay: 0.1s; }
-  .reveal-delay-2 { transition-delay: 0.2s; }
-  .reveal-delay-3 { transition-delay: 0.3s; }
-  .reveal-delay-4 { transition-delay: 0.4s; }
+:root {
+  --gold: #D4AF37;
+  --gold2: #b8941e;
+  --gold-dim: rgba(212,175,55,0.12);
+  --gold-glow: rgba(212,175,55,0.25);
+  --navy: #0c1630;
+  --navy2: #162044;
+  --bg: #06080f;
+  --bg2: #080c17;
+  --surface: #0e1525;
+  --border: rgba(255,255,255,0.07);
+  --text: #f0eee8;
+  --text-dim: rgba(240,238,232,0.55);
+  --text-muted: rgba(240,238,232,0.3);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Inter',sans-serif;
+  font-size:16px;
+  line-height:1.6;
+  overflow-x:hidden;
+}
+
+/* ---- GRAIN OVERLAY ---- */
+body::after{
+  content:'';
+  position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:9999;opacity:0.45;
+}
+
+/* ============ NAV ============ */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:500;
+  padding:0 56px;height:72px;
+  display:flex;align-items:center;justify-content:space-between;
+  transition:background .4s,backdrop-filter .4s;
+}
+nav.scrolled{
+  background:rgba(6,8,15,0.95);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+}
+
+/* SVG logo inline */
+.nav-logo{height:42px;width:auto;display:block;}
+
+.nav-links{display:flex;gap:36px;list-style:none;}
+.nav-links a{
+  color:var(--text-dim);text-decoration:none;
+  font-size:12px;font-weight:500;letter-spacing:1.2px;text-transform:uppercase;
+  transition:color .25s;
+}
+.nav-links a:hover{color:var(--gold);}
+.nav-btn{
+  background:var(--gold);color:var(--bg);
+  padding:10px 24px;border-radius:2px;
+  font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;
+  text-decoration:none;transition:opacity .25s,transform .25s;
+  display:inline-block;
+}
+.nav-btn:hover{opacity:.88;transform:translateY(-1px);}
+
+.mob-btn{
+  display:none;background:none;border:none;cursor:pointer;
+  flex-direction:column;gap:5px;padding:6px;
+}
+.mob-btn span{display:block;width:24px;height:1.5px;background:var(--text);}
+
+/* ============ HERO ============ */
+#hero{
+  position:relative;min-height:100vh;
+  display:flex;flex-direction:column;justify-content:flex-end;
+  padding:0 56px 80px;overflow:hidden;
+}
+
+.hero-photo{
+  position:absolute;inset:0;
+  background:url('https://picsum.photos/seed/nightroad/1920/1080') center/cover no-repeat;
+  transform:scale(1.05);
+  transition:transform 8s ease;
+}
+.hero-photo.loaded{transform:scale(1);}
+
+.hero-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(
+    170deg,
+    rgba(6,8,15,0.25) 0%,
+    rgba(6,8,15,0.55) 40%,
+    rgba(6,8,15,0.92) 80%,
+    rgba(6,8,15,1) 100%
+  );
+}
+
+/* diagonal gold line */
+.hero-line{
+  position:absolute;
+  top:0;right:120px;
+  width:1px;height:60%;
+  background:linear-gradient(to bottom,transparent,var(--gold),transparent);
+  opacity:.3;
+}
+
+.hero-badge{
+  position:relative;z-index:1;
+  display:inline-flex;align-items:center;gap:10px;
+  background:rgba(212,175,55,.1);
+  border:1px solid rgba(212,175,55,.3);
+  color:var(--gold);
+  font-size:11px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;
+  padding:9px 18px;border-radius:1px;
+  margin-bottom:32px;width:fit-content;
+  clip-path:inset(0 100% 0 0);
+  transition:clip-path .8s cubic-bezier(.77,0,.18,1);
+}
+.hero-badge.show{clip-path:inset(0 0% 0 0);}
+.hero-badge::before{
+  content:'';width:7px;height:7px;
+  background:var(--gold);border-radius:50%;
+  animation:blink 2s infinite;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+.hero-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(64px,10vw,148px);
+  line-height:.88;letter-spacing:1px;
+  position:relative;z-index:1;
+  margin-bottom:28px;
+}
+.hero-title .line{
+  display:block;overflow:hidden;
+}
+.hero-title .line span{
+  display:block;
+  transform:translateY(110%);
+  transition:transform .9s cubic-bezier(.77,0,.18,1);
+}
+.hero-title .line span.show{transform:translateY(0);}
+.hero-title .gold{color:var(--gold);}
+
+.hero-sub{
+  font-size:16px;line-height:1.7;
+  color:var(--text-dim);max-width:500px;
+  font-weight:300;position:relative;z-index:1;
+  margin-bottom:44px;
+  opacity:0;transform:translateY(20px);
+  transition:opacity .8s ease .7s,transform .8s ease .7s;
+}
+.hero-sub.show{opacity:1;transform:translateY(0);}
+.hero-sub strong{color:var(--text);font-weight:600;}
+
+.hero-actions{
+  display:flex;gap:12px;flex-wrap:wrap;
+  position:relative;z-index:1;
+  opacity:0;
+  transition:opacity .8s ease .9s;
+}
+.hero-actions.show{opacity:1;}
+
+.btn-gold{
+  background:var(--gold);
+  color:var(--bg);
+  padding:16px 40px;border:none;border-radius:2px;
+  font-family:'Inter',sans-serif;
+  font-size:13px;font-weight:600;letter-spacing:1px;text-transform:uppercase;
+  cursor:pointer;text-decoration:none;display:inline-block;
+  transition:all .3s;
+  box-shadow:0 0 0 rgba(212,175,55,0);
+}
+.btn-gold:hover{
+  background:#fff;transform:translateY(-2px);
+  box-shadow:0 8px 32px rgba(212,175,55,.4);
+}
+.btn-ghost{
+  background:transparent;color:var(--text);
+  padding:15px 36px;
+  border:1px solid rgba(255,255,255,.18);border-radius:2px;
+  font-family:'Inter',sans-serif;font-size:13px;font-weight:500;
+  letter-spacing:1px;text-transform:uppercase;
+  cursor:pointer;text-decoration:none;display:inline-block;
+  transition:all .3s;
+}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold);}
+
+/* hero stats bar */
+.hero-stats{
+  position:absolute;right:56px;bottom:80px;z-index:1;
+  display:flex;flex-direction:column;align-items:flex-end;gap:28px;
+  opacity:0;transition:opacity .8s ease 1.1s;
+}
+.hero-stats.show{opacity:1;}
+.hstat-num{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:64px;color:var(--gold);line-height:1;
+}
+.hstat-label{
+  font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--text-muted);margin-top:2px;text-align:right;
+}
+
+/* ============ MARQUEE ============ */
+.marquee-wrap{
+  background:var(--gold);
+  padding:14px 0;overflow:hidden;
+  position:relative;
+}
+.marquee-track{
+  display:flex;width:max-content;
+  animation:marquee 22s linear infinite;
+}
+.marquee-track span{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:18px;letter-spacing:3px;
+  color:var(--bg);padding:0 40px;
+  white-space:nowrap;
+}
+.marquee-dot{color:var(--navy2);opacity:.5;}
+@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* ============ SECTIONS BASE ============ */
+.section{padding:120px 56px;}
+.container{max-width:1200px;margin:0 auto;}
+.s-label{
+  font-size:11px;font-weight:600;letter-spacing:3px;text-transform:uppercase;
+  color:var(--gold);margin-bottom:14px;
+}
+.s-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(42px,6vw,80px);
+  line-height:.95;letter-spacing:.5px;
+  margin-bottom:20px;
+}
+.s-text{
+  font-size:15px;color:var(--text-dim);
+  max-width:520px;line-height:1.8;font-weight:300;
+}
+
+/* diagonal clip dividers */
+.clip-top{clip-path:polygon(0 40px,100% 0,100% 100%,0 100%);}
+.clip-both{clip-path:polygon(0 40px,100% 0,100% calc(100% - 40px),0 100%);}
+.clip-bottom{clip-path:polygon(0 0,100% 0,100% calc(100% - 40px),0 100%);}
+
+/* ============ DRIVERS SECTION ============ */
+#drivers{
+  background:var(--bg2);
+  padding:140px 56px 120px;
+  position:relative;overflow:hidden;
+}
+
+/* giant bg text */
+.bg-text{
+  position:absolute;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:420px;line-height:1;
+  color:rgba(212,175,55,.04);
+  top:50%;transform:translateY(-50%);
+  right:-60px;pointer-events:none;
+  user-select:none;white-space:nowrap;
+}
+
+.drivers-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:80px;align-items:center;
+  position:relative;z-index:1;
+}
+
+/* comparison block */
+.compare-block{}
+.compare-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(48px,7vw,96px);
+  color:var(--gold);line-height:1;
+  margin-bottom:8px;
+}
+.compare-sub{
+  font-size:14px;color:var(--text-muted);
+  margin-bottom:40px;font-weight:300;
+}
+
+.bar-wrap{margin-bottom:20px;}
+.bar-label-row{
+  display:flex;justify-content:space-between;
+  margin-bottom:8px;
+}
+.bar-name{font-size:13px;font-weight:500;letter-spacing:.5px;}
+.bar-pct{font-family:'Bebas Neue',sans-serif;font-size:20px;}
+.bar-track{
+  height:6px;background:rgba(255,255,255,.08);
+  border-radius:99px;overflow:hidden;
+}
+.bar-fill{
+  height:100%;border-radius:99px;
+  width:0;transition:width 1.2s cubic-bezier(.77,0,.18,1);
+}
+.bar-fill.gold{background:linear-gradient(90deg,var(--gold),var(--gold2));}
+.bar-fill.dim{background:rgba(255,255,255,.2);}
+
+/* driver photo */
+.driver-photo-wrap{
+  position:relative;border-radius:3px;overflow:hidden;
+}
+.driver-photo-wrap img{
+  width:100%;height:480px;object-fit:cover;
+  display:block;filter:brightness(.85) saturate(.9);
+  transition:filter .4s;
+}
+.driver-photo-wrap:hover img{filter:brightness(.95) saturate(1);}
+.driver-photo-wrap::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(6,8,15,.6) 0%,transparent 60%);
+}
+.driver-photo-badge{
+  position:absolute;bottom:28px;left:28px;z-index:2;
+  background:var(--gold);color:var(--bg);
+  padding:12px 20px;border-radius:2px;
+  font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;
+}
+
+/* features list */
+.feat-list{
+  list-style:none;display:flex;flex-direction:column;gap:14px;
+  margin-top:36px;
+}
+.feat-list li{
+  display:flex;align-items:flex-start;gap:14px;
+  font-size:14px;color:var(--text-dim);font-weight:300;line-height:1.55;
+}
+.feat-ico{
+  width:22px;height:22px;border-radius:50%;
+  background:var(--gold-dim);border:1px solid rgba(212,175,55,.25);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;
+}
+.feat-ico svg{width:10px;height:10px;stroke:var(--gold);fill:none;stroke-width:2.5;}
+
+/* ============ PASSENGERS SECTION ============ */
+#passengers{
+  background:var(--bg);
+  padding:120px 56px 100px;
+  position:relative;overflow:hidden;
+}
+
+.pass-header{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:60px;align-items:end;margin-bottom:64px;
+}
+
+.pass-cards{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:2px;border-radius:3px;overflow:hidden;
+  background:var(--border);
+}
+.pass-card{
+  background:var(--surface);padding:36px 28px;
+  position:relative;overflow:hidden;cursor:default;
+  transition:background .3s,transform .2s;
+}
+.pass-card::before{
+  content:'';position:absolute;
+  top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--gold),transparent);
+  transform:scaleX(0);transform-origin:left;
+  transition:transform .4s;
+}
+.pass-card:hover{background:#111b30;}
+.pass-card:hover::before{transform:scaleX(1);}
+.pc-num{
+  font-family:'Bebas Neue',sans-serif;font-size:52px;
+  color:rgba(212,175,55,.15);line-height:1;margin-bottom:14px;
+}
+.pc-title{font-size:15px;font-weight:600;margin-bottom:8px;}
+.pc-text{font-size:13px;color:var(--text-muted);line-height:1.7;font-weight:300;}
+
+/* photo strip */
+.photo-strip{
+  display:grid;grid-template-columns:2fr 1fr;
+  gap:2px;margin-top:2px;border-radius:0 0 3px 3px;overflow:hidden;
+}
+.photo-strip-item{
+  height:260px;overflow:hidden;position:relative;
+}
+.photo-strip-item img{
+  width:100%;height:100%;object-fit:cover;
+  filter:brightness(.7) saturate(.85);
+  transition:transform .6s ease,filter .4s;
+}
+.photo-strip-item:hover img{
+  transform:scale(1.04);filter:brightness(.85) saturate(1);
+}
+.photo-strip-label{
+  position:absolute;bottom:20px;left:20px;
+  font-family:'Bebas Neue',sans-serif;font-size:20px;
+  color:var(--gold);letter-spacing:2px;z-index:1;
+}
+
+/* ============ STATS SECTION ============ */
+#stats{
+  background:var(--navy);
+  padding:80px 56px;
+  border-top:1px solid rgba(212,175,55,.15);
+  border-bottom:1px solid rgba(212,175,55,.15);
+}
+.stats-row{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:2px;background:rgba(255,255,255,.04);
+  border-radius:3px;overflow:hidden;
+}
+.stat-box{
+  background:var(--navy);padding:48px 36px;
+  text-align:center;
+}
+.stat-box-num{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:72px;color:var(--gold);line-height:1;
+}
+.stat-box-label{
+  font-size:11px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--text-muted);margin-top:8px;
+}
+
+/* ============ STANDARDS ============ */
+#standards{
+  background:var(--bg2);
+  padding:120px 56px;
+}
+.std-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:2px;margin-top:60px;
+  background:var(--border);border-radius:3px;overflow:hidden;
+}
+.std-item{
+  background:var(--bg2);padding:36px 32px;
+  transition:background .3s;
+  cursor:default;
+}
+.std-item:hover{background:var(--surface);}
+.std-n{
+  font-family:'Bebas Neue',sans-serif;font-size:44px;
+  color:var(--gold);opacity:.28;line-height:1;margin-bottom:14px;
+}
+.std-t{font-size:15px;font-weight:600;margin-bottom:8px;}
+.std-d{font-size:13px;color:var(--text-muted);line-height:1.65;font-weight:300;}
+
+/* ============ STEPS ============ */
+#steps{
+  background:var(--bg);
+  padding:120px 56px;
+}
+.steps-container{
+  display:grid;grid-template-columns:repeat(5,1fr);
+  gap:0;margin-top:64px;position:relative;
+}
+.steps-container::before{
+  content:'';position:absolute;
+  top:32px;left:32px;right:32px;height:1px;
+  background:linear-gradient(90deg,var(--gold),rgba(212,175,55,.1));
+}
+.step-item{padding:0 20px;position:relative;}
+.step-circle{
+  width:64px;height:64px;border-radius:50%;
+  background:var(--bg);border:2px solid var(--gold);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--gold);
+  margin-bottom:24px;position:relative;z-index:1;
+  transition:background .3s,color .3s;
+}
+.step-item:hover .step-circle{background:var(--gold);color:var(--bg);}
+.step-t{font-size:14px;font-weight:600;margin-bottom:8px;}
+.step-d{font-size:13px;color:var(--text-muted);line-height:1.6;font-weight:300;}
+
+/* ============ WHY DGV ============ */
+#why{
+  background:var(--navy);
+  padding:120px 56px;
+  position:relative;overflow:hidden;
+}
+.why-grid{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;}
+.why-photo{
+  position:relative;border-radius:3px;overflow:hidden;height:420px;
+}
+.why-photo img{
+  width:100%;height:100%;object-fit:cover;
+  filter:brightness(.7) saturate(.8);
+}
+.why-photo::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(45deg,rgba(6,8,15,.8) 0%,transparent 60%);
+}
+.why-photo-caption{
+  position:absolute;bottom:24px;left:24px;z-index:1;
+}
+.why-photo-caption .cap-title{
+  font-family:'Bebas Neue',sans-serif;font-size:32px;
+  color:var(--gold);letter-spacing:1px;
+}
+.why-photo-caption .cap-sub{
+  font-size:12px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;
+}
+
+/* ============ FORM SECTION ============ */
+#form-sec{
+  background:var(--surface);
+  padding:120px 56px;
+  border-top:1px solid var(--border);
+}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:start;}
+
+.form-promise{
+  margin-top:36px;
+  display:flex;flex-direction:column;gap:16px;
+}
+.form-promise-item{
+  display:flex;align-items:center;gap:14px;
+  font-size:14px;color:var(--text-dim);
+}
+
+.form-wrap{display:flex;flex-direction:column;gap:14px;}
+.form-field{position:relative;}
+.form-field input,
+.form-field select,
+.form-field textarea{
+  width:100%;
+  background:var(--bg);
+  border:1px solid var(--border);border-radius:2px;
+  padding:20px 18px 8px;
+  color:var(--text);font-family:'Inter',sans-serif;font-size:14px;
+  outline:none;transition:border-color .3s;
+  -webkit-appearance:none;
+}
+.form-field select{padding:14px 18px;}
+.form-field textarea{padding:18px;min-height:100px;resize:vertical;font-weight:300;}
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus{border-color:rgba(212,175,55,.45);}
+.form-field label{
+  position:absolute;top:14px;left:18px;
+  font-size:12px;color:var(--text-muted);
+  letter-spacing:.5px;pointer-events:none;
+  transition:all .25s;
+}
+.form-field input:focus~label,
+.form-field input:not(:placeholder-shown)~label{
+  top:6px;font-size:10px;letter-spacing:1px;color:var(--gold);
+}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.success-banner{
+  display:none;background:rgba(212,175,55,.1);
+  border:1px solid rgba(212,175,55,.3);border-radius:2px;
+  padding:16px 20px;color:var(--gold);font-size:14px;font-weight:500;text-align:center;
+}
+
+/* ============ FINAL CTA ============ */
+#final{
+  min-height:65vh;
+  background:url('https://picsum.photos/seed/roadnight/1920/1080') center/cover no-repeat;
+  position:relative;display:flex;align-items:center;
+  padding:80px 56px;
+}
+#final::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(6,8,15,.96) 0%,rgba(6,8,15,.75) 60%,rgba(12,22,48,.9) 100%);
+}
+.final-inner{position:relative;z-index:1;max-width:700px;}
+.final-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(52px,8vw,108px);
+  line-height:.92;margin-bottom:24px;
+}
+.final-title .gold{color:var(--gold);}
+.final-sub{font-size:16px;color:var(--text-dim);margin-bottom:44px;max-width:460px;font-weight:300;line-height:1.75;}
+.final-actions{display:flex;gap:14px;flex-wrap:wrap;}
+
+/* ============ FOOTER ============ */
+footer{
+  background:var(--bg);
+  border-top:1px solid var(--border);
+  padding:36px 56px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.footer-copy{font-size:12px;color:var(--text-muted);line-height:1.7;}
+.footer-contact{font-size:13px;color:var(--text-dim);text-align:right;line-height:1.8;}
+
+/* ============ REVEAL ============ */
+.reveal{
+  opacity:0;transform:translateY(32px);
+  transition:opacity .75s ease,transform .75s ease;
+}
+.reveal-left{
+  opacity:0;transform:translateX(-40px);
+  transition:opacity .75s ease,transform .75s ease;
+}
+.reveal-right{
+  opacity:0;transform:translateX(40px);
+  transition:opacity .75s ease,transform .75s ease;
+}
+.reveal.vis,.reveal-left.vis,.reveal-right.vis{
+  opacity:1;transform:translate(0);
+}
+.d1{transition-delay:.1s}.d2{transition-delay:.2s}
+.d3{transition-delay:.3s}.d4{transition-delay:.4s}
+
+/* ============ MOBILE ============ */
+@media(max-width:960px){
+  nav{padding:0 20px;}
+  .nav-links{display:none;}
+  .mob-btn{display:flex;}
+  #hero{padding:0 20px 64px;}
+  .hero-stats{display:none;}
+  .section,#drivers,#passengers,#standards,#steps,#stats,#why,#form-sec,#final,#steps{padding:80px 20px;}
+  .s-title{font-size:clamp(38px,8vw,64px);}
+  .drivers-grid{grid-template-columns:1fr;gap:48px;}
+  .driver-photo-wrap img{height:320px;}
+  .pass-header{grid-template-columns:1fr;gap:20px;}
+  .pass-cards{grid-template-columns:1fr;}
+  .photo-strip{grid-template-columns:1fr;}
+  .photo-strip-item{height:200px;}
+  .stats-row{grid-template-columns:repeat(2,1fr);}
+  .std-grid{grid-template-columns:1fr;}
+  .steps-container{grid-template-columns:1fr;gap:32px;}
+  .steps-container::before{display:none;}
+  .step-item{padding:0;}
+  .why-grid{grid-template-columns:1fr;gap:40px;}
+  .why-photo{height:280px;}
+  .form-grid{grid-template-columns:1fr;gap:40px;}
+  .form-row{grid-template-columns:1fr;}
+  #final{min-height:auto;padding:80px 20px;}
+  footer{flex-direction:column;gap:16px;text-align:center;padding:32px 20px;}
+  .footer-contact{text-align:center;}
+  .final-actions{flex-direction:column;}
+}
+
+/* scrollbar */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--gold);border-radius:2px;}
 </style>
 </head>
 <body>
 
-<!-- NAV -->
-<nav>
-  <a href="#" class="logo">VELO</a>
+<!-- ============ NAV ============ -->
+<nav id="nav">
+  <a href="#">
+    <svg class="nav-logo" viewBox="0 0 240 52" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="gld" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#e8ca60"/>
+          <stop offset="100%" stop-color="#b8941e"/>
+        </linearGradient>
+        <linearGradient id="nvy" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#2a3f7a"/>
+          <stop offset="100%" stop-color="#0c1630"/>
+        </linearGradient>
+      </defs>
+      <!-- A -->
+      <text x="0" y="44" font-family="Bebas Neue,sans-serif" font-size="50" fill="url(#nvy)">A</text>
+      <!-- 2 -->
+      <text x="36" y="44" font-family="Bebas Neue,sans-serif" font-size="50" fill="url(#gld)">2</text>
+      <!-- B -->
+      <text x="66" y="44" font-family="Bebas Neue,sans-serif" font-size="50" fill="url(#nvy)">B</text>
+      <!-- checkered squares -->
+      <rect x="106" y="4"  width="11" height="8" rx="1" fill="url(#gld)" opacity=".95"/>
+      <rect x="119" y="4"  width="11" height="8" rx="1" fill="url(#nvy)" opacity=".95"/>
+      <rect x="132" y="4"  width="11" height="8" rx="1" fill="url(#gld)" opacity=".55"/>
+      <rect x="106" y="14" width="11" height="8" rx="1" fill="url(#nvy)" opacity=".95"/>
+      <rect x="119" y="14" width="11" height="8" rx="1" fill="url(#gld)" opacity=".95"/>
+      <rect x="132" y="14" width="11" height="8" rx="1" fill="url(#nvy)" opacity=".55"/>
+      <rect x="106" y="24" width="11" height="8" rx="1" fill="url(#gld)" opacity=".3"/>
+      <rect x="119" y="24" width="11" height="8" rx="1" fill="url(#nvy)" opacity=".3"/>
+      <!-- swoosh -->
+      <path d="M2 50 Q80 62 148 42" stroke="url(#gld)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <!-- TAXI -->
+      <text x="108" y="48" font-family="Bebas Neue,sans-serif" font-size="16" letter-spacing="3.5" fill="url(#nvy)">TAXI</text>
+    </svg>
+  </a>
+
   <ul class="nav-links">
     <li><a href="#drivers">Водителям</a></li>
     <li><a href="#passengers">Пассажирам</a></li>
     <li><a href="#standards">Стандарты</a></li>
-    <li><a href="#faq">FAQ</a></li>
-    <li><a href="#form-section" class="nav-cta">Подать заявку</a></li>
+    <li><a href="#why">О нас</a></li>
+    <li><a href="#form-sec" class="nav-btn">Подать заявку</a></li>
   </ul>
-  <button class="mobile-menu-btn" aria-label="Меню">
+  <button class="mob-btn" aria-label="Меню" onclick="toggleMob()">
     <span></span><span></span><span></span>
   </button>
 </nav>
 
-<!-- HERO -->
+<!-- ============ HERO ============ -->
 <section id="hero">
-  <div class="hero-bg"></div>
-  <div class="hero-grid"></div>
+  <div class="hero-photo" id="heroPhoto"></div>
+  <div class="hero-overlay"></div>
   <div class="hero-line"></div>
 
-  <div class="hero-badge">Скоро в Даугавпилсе</div>
+  <div class="hero-badge" id="heroBadge">Скоро запуск в Даугавпилсе</div>
 
-  <h1 class="hero-title reveal">
-    Локальное такси,<br>
-    где <em>водитель</em><br>
-    зарабатывает больше
+  <h1 class="hero-title">
+    <span class="line"><span id="hl1">Такси нового</span></span>
+    <span class="line"><span id="hl2">поколения</span></span>
+    <span class="line gold"><span id="hl3">Даугавпилс</span></span>
   </h1>
 
-  <p class="hero-sub reveal reveal-delay-1">
-    Новый стандарт городского такси в Даугавпилсе.<br>
-    <strong>Комиссия всего 10%</strong> — плюс поддержка с бухгалтерией, оформлением и повышением дохода. Для пассажиров — комфорт, вежливость и понятные стандарты сервиса.
+  <p class="hero-sub" id="heroSub">
+    Локальная альтернатива крупным агрегаторам.<br>
+    <strong>Комиссия всего 10%</strong> — плюс бухгалтерия, оформление и реальная поддержка.<br>
+    Для пассажиров — комфорт, чистота и вежливость как стандарт.
   </p>
 
-  <div class="hero-actions reveal reveal-delay-2">
-    <a href="#form-section" class="btn-primary">Стать водителем</a>
-    <a href="#passengers-cta" class="btn-outline">Пассажирам</a>
-    <a href="#faq" class="btn-outline">О запуске</a>
+  <div class="hero-actions" id="heroActions">
+    <a href="#form-sec" class="btn-gold">Стать водителем</a>
+    <a href="#passengers" class="btn-ghost">Пассажирам</a>
+    <a href="#form-sec" class="btn-ghost">Следить за запуском</a>
   </div>
 
-  <div class="hero-stats">
-    <div class="stat">
-      <div class="stat-num">10%</div>
-      <div class="stat-label">Комиссия сервиса</div>
+  <div class="hero-stats" id="heroStats">
+    <div>
+      <div class="hstat-num">10%</div>
+      <div class="hstat-label">Комиссия сервиса</div>
     </div>
-    <div class="stat">
-      <div class="stat-num">+14%</div>
-      <div class="stat-label">Дохода водителям</div>
+    <div>
+      <div class="hstat-num">×2.4</div>
+      <div class="hstat-label">Ниже рынка</div>
     </div>
   </div>
 </section>
 
-<!-- DRIVERS -->
-<section id="drivers">
-  <div class="container">
-    <p class="section-label reveal">Для водителей</p>
-    <h2 class="section-title reveal">Больше денег<br>остаётся у вас</h2>
-    <p class="section-text reveal reveal-delay-1">Мы строим систему, где водитель не остаётся один на один с приложением. Наша задача — дать заказы, поддержку и понятные инструменты.</p>
+<!-- ============ MARQUEE ============ -->
+<div class="marquee-wrap">
+  <div class="marquee-track" id="marqueeTrack">
+    <span>A2B TAXI</span><span class="marquee-dot">·</span>
+    <span>КОМИССИЯ 10%</span><span class="marquee-dot">·</span>
+    <span>ДАУГАВПИЛС</span><span class="marquee-dot">·</span>
+    <span>ТАКСИ С ХАРАКТЕРОМ</span><span class="marquee-dot">·</span>
+    <span>БОЛЬШЕ ДОХОДА ВОДИТЕЛЯМ</span><span class="marquee-dot">·</span>
+    <span>НОВЫЙ СТАНДАРТ</span><span class="marquee-dot">·</span>
+    <span>КОМФОРТ ДЛЯ ПАССАЖИРОВ</span><span class="marquee-dot">·</span>
+    <span>A2B TAXI</span><span class="marquee-dot">·</span>
+    <span>КОМИССИЯ 10%</span><span class="marquee-dot">·</span>
+    <span>ДАУГАВПИЛС</span><span class="marquee-dot">·</span>
+    <span>ТАКСИ С ХАРАКТЕРОМ</span><span class="marquee-dot">·</span>
+    <span>БОЛЬШЕ ДОХОДА ВОДИТЕЛЯМ</span><span class="marquee-dot">·</span>
+    <span>НОВЫЙ СТАНДАРТ</span><span class="marquee-dot">·</span>
+    <span>КОМФОРТ ДЛЯ ПАССАЖИРОВ</span><span class="marquee-dot">·</span>
+  </div>
+</div>
 
+<!-- ============ DRIVERS ============ -->
+<section id="drivers" class="clip-top">
+  <div class="bg-text">10%</div>
+  <div class="container">
     <div class="drivers-grid">
-      <div class="commission-card reveal">
-        <div class="commission-big">10%</div>
-        <div class="commission-label">Комиссия сервиса VELO — в 2,4 раза ниже рынка</div>
-        <div class="vs-row">
-          <div class="vs-item">
-            <div class="vs-num green">10%</div>
-            <div class="vs-label">VELO</div>
+      <!-- LEFT: compare + features -->
+      <div class="reveal-left">
+        <p class="s-label">Для водителей</p>
+        <h2 class="s-title">Больше денег<br>остаётся у вас</h2>
+        <p class="s-text">Мы строим систему, где водитель не остаётся один на один с приложением — получает заказы, поддержку и инструменты для стабильного роста.</p>
+
+        <div style="margin-top:44px;">
+          <div class="bar-wrap">
+            <div class="bar-label-row">
+              <span class="bar-name" style="color:var(--gold);">A2B Taxi</span>
+              <span class="bar-pct" style="color:var(--gold);">10%</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill gold" data-width="27" style="width:0%"></div>
+            </div>
           </div>
-          <div class="vs-sep">vs</div>
-          <div class="vs-item">
-            <div class="vs-num red">~24%</div>
-            <div class="vs-label">Крупные агрегаторы</div>
+          <div class="bar-wrap">
+            <div class="bar-label-row">
+              <span class="bar-name" style="color:var(--text-muted);">Крупные агрегаторы</span>
+              <span class="bar-pct" style="color:var(--text-muted);">~24%</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill dim" data-width="65" style="width:0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <ul class="feat-list">
+          <li><div class="feat-ico"><svg viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2"/></svg></div><div>Комиссия всего <strong style="color:var(--text);">10%</strong> — оставляйте больше с каждой поездки</div></li>
+          <li><div class="feat-ico"><svg viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2"/></svg></div><div>Помощь с бухгалтерией и оформлением документов</div></li>
+          <li><div class="feat-ico"><svg viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2"/></svg></div><div>Консультации по легальной оптимизации расходов</div></li>
+          <li><div class="feat-ico"><svg viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2"/></svg></div><div>Поддержка при регистрации и начале работы</div></li>
+          <li><div class="feat-ico"><svg viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2"/></svg></div><div>Инструменты для снижения операционных расходов</div></li>
+          <li><div class="feat-ico"><svg viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2"/></svg></div><div>Живая поддержка — не бот, а реальный человек</div></li>
+        </ul>
+
+        <div style="margin-top:40px;">
+          <a href="#form-sec" class="btn-gold">Стать водителем A2B</a>
+        </div>
+      </div>
+
+      <!-- RIGHT: photo -->
+      <div class="reveal-right">
+        <div class="driver-photo-wrap">
+          <img
+            src="https://picsum.photos/seed/cardriver/800/1000"
+            alt="Водитель за рулём"
+            loading="lazy"
+          >
+          <div class="driver-photo-badge">Комиссия 10%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ STATS BAND ============ -->
+<section id="stats">
+  <div class="container">
+    <div class="stats-row">
+      <div class="stat-box reveal">
+        <div class="stat-box-num" data-count="10" data-suffix="%">0%</div>
+        <div class="stat-box-label">Комиссия сервиса</div>
+      </div>
+      <div class="stat-box reveal d1">
+        <div class="stat-box-num" data-count="24" data-suffix="/7">0</div>
+        <div class="stat-box-label">Поддержка водителей</div>
+      </div>
+      <div class="stat-box reveal d2">
+        <div class="stat-box-num" data-count="5" data-suffix=" шагов">0</div>
+        <div class="stat-box-label">До первого заказа</div>
+      </div>
+      <div class="stat-box reveal d3">
+        <div class="stat-box-num" data-count="100" data-suffix="%">0%</div>
+        <div class="stat-box-label">Локальный подход</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PASSENGERS ============ -->
+<section id="passengers" class="clip-both" style="background:var(--bg);padding:140px 56px;">
+  <div class="container">
+    <div class="pass-header">
+      <div class="reveal-left">
+        <p class="s-label">Для пассажиров</p>
+        <h2 class="s-title">Такси, в которое<br>приятно садиться</h2>
+      </div>
+      <div class="reveal-right">
+        <p class="s-text">Не просто из точки А в точку Б — нормальный человеческий сервис каждый раз. Мы хотим вернуть такси статус приятного городского опыта.</p>
+        <div style="margin-top:24px;">
+          <a href="#form-sec" class="btn-ghost">Получить уведомление о запуске</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="pass-cards reveal">
+      <div class="pass-card">
+        <div class="pc-num">01</div>
+        <div class="pc-title">Вежливость</div>
+        <div class="pc-text">Водитель приветствует пассажира. Уважительный тон — не пожелание, а обязательный стандарт платформы.</div>
+      </div>
+      <div class="pass-card">
+        <div class="pc-num">02</div>
+        <div class="pc-title">Чистота</div>
+        <div class="pc-text">Чистый салон, чистое авто снаружи. Никаких запахов, аккуратные коврики перед каждой сменой.</div>
+      </div>
+      <div class="pass-card">
+        <div class="pc-num">03</div>
+        <div class="pc-title">Безопасность</div>
+        <div class="pc-text">Аккуратное вождение, соблюдение ПДД. Пассажиру комфортно и спокойно в каждой поездке.</div>
+      </div>
+      <div class="pass-card">
+        <div class="pc-num">04</div>
+        <div class="pc-title">Предсказуемость</div>
+        <div class="pc-text">Один и тот же уровень сервиса каждый раз. Никаких неприятных сюрпризов.</div>
+      </div>
+      <div class="pass-card">
+        <div class="pc-num">05</div>
+        <div class="pc-title">Comfort+</div>
+        <div class="pc-text">Вода, приятный аромат, подсветка, аккуратный интерьер — для тех, кто хочет большего.</div>
+      </div>
+      <div class="pass-card">
+        <div class="pc-num">06</div>
+        <div class="pc-title">Детали</div>
+        <div class="pc-text">Небольшие вещи имеют значение. Именно из них складывается ощущение качественного сервиса.</div>
+      </div>
+    </div>
+
+    <div class="photo-strip reveal">
+      <div class="photo-strip-item">
+        <img src="https://picsum.photos/seed/carinterior/900/600" alt="Интерьер авто" loading="lazy">
+        <div class="photo-strip-label">Comfort+</div>
+      </div>
+      <div class="photo-strip-item">
+        <img src="https://picsum.photos/seed/nightdrive/600/600" alt="Ночной город" loading="lazy">
+        <div class="photo-strip-label">24/7</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ STANDARDS ============ -->
+<section id="standards" class="clip-top">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:60px;margin-bottom:60px;">
+      <div class="reveal-left">
+        <p class="s-label">Стандарты качества</p>
+        <h2 class="s-title">Новый стандарт<br>городского такси</h2>
+      </div>
+      <div class="reveal-right" style="display:flex;align-items:flex-end;">
+        <p class="s-text">Не пожелания — реальные требования к каждой поездке. Устанавливаем планку и следим за тем, чтобы она соблюдалась каждым водителем.</p>
+      </div>
+    </div>
+    <div class="std-grid reveal">
+      <div class="std-item">
+        <div class="std-n">01</div>
+        <div class="std-t">Приветствие пассажира</div>
+        <div class="std-d">Водитель здоровается с каждым. Базовый минимум вежливости — обязательный стандарт.</div>
+      </div>
+      <div class="std-item">
+        <div class="std-n">02</div>
+        <div class="std-t">Чистый автомобиль</div>
+        <div class="std-d">Чисто внутри и снаружи. Никаких запахов, чистые коврики перед каждой сменой.</div>
+      </div>
+      <div class="std-item">
+        <div class="std-n">03</div>
+        <div class="std-t">Аккуратное вождение</div>
+        <div class="std-d">Без резких торможений, без агрессии на дороге. Пассажиру безопасно и комфортно.</div>
+      </div>
+      <div class="std-item">
+        <div class="std-n">04</div>
+        <div class="std-t">Приятная атмосфера</div>
+        <div class="std-d">Нет неприятных запахов, нет раздражающей музыки — если пассажир не хочет.</div>
+      </div>
+      <div class="std-item">
+        <div class="std-n">05</div>
+        <div class="std-t">Категория Comfort+</div>
+        <div class="std-d">Вода, жвачка, аромат, подсветка, аккуратный внешний вид — для премиальных поездок.</div>
+      </div>
+      <div class="std-item">
+        <div class="std-n">06</div>
+        <div class="std-t">Контроль качества</div>
+        <div class="std-d">Регулярная проверка. Рейтинг водителя — реальный инструмент, не декорация.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ STEPS ============ -->
+<section id="steps" class="clip-bottom">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:64px;">
+      <p class="s-label reveal" style="display:inline-block;">Как начать работу</p>
+      <h2 class="s-title reveal">Пять шагов до первого заказа</h2>
+    </div>
+    <div class="steps-container">
+      <div class="step-item reveal">
+        <div class="step-circle">1</div>
+        <div class="step-t">Оставьте заявку</div>
+        <div class="step-d">Заполните форму. 2 минуты — и вы в системе.</div>
+      </div>
+      <div class="step-item reveal d1">
+        <div class="step-circle">2</div>
+        <div class="step-t">Мы свяжемся</div>
+        <div class="step-d">Звонок или сообщение. Обсуждаем условия, отвечаем на вопросы.</div>
+      </div>
+      <div class="step-item reveal d2">
+        <div class="step-circle">3</div>
+        <div class="step-t">Помощь с оформлением</div>
+        <div class="step-d">Документы, регистрация, организационные вопросы — мы помогаем.</div>
+      </div>
+      <div class="step-item reveal d3">
+        <div class="step-circle">4</div>
+        <div class="step-t">Настройка профиля</div>
+        <div class="step-d">Профиль, стандарты работы и инструменты для роста дохода.</div>
+      </div>
+      <div class="step-item reveal d4">
+        <div class="step-circle">5</div>
+        <div class="step-t">Получайте заказы</div>
+        <div class="step-d">Работаете с комиссией 10% и полной поддержкой команды.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ WHY DGV ============ -->
+<section id="why" class="clip-top">
+  <div class="container">
+    <div class="why-grid">
+      <div class="why-photo reveal-left">
+        <img src="https://picsum.photos/seed/citynight/900/600" alt="Даугавпилс ночью" loading="lazy">
+        <div class="why-photo-caption">
+          <div class="cap-title">Даугавпилс</div>
+          <div class="cap-sub">Первый город запуска</div>
+        </div>
+      </div>
+      <div class="reveal-right">
+        <p class="s-label">Почему Даугавпилс</p>
+        <h2 class="s-title">Правильный<br>старт</h2>
+        <p class="s-text">Даугавпилс — идеальный рынок для запуска новой модели такси. Стабильный спрос, активные водители и потребность в удобной локальной альтернативе.</p>
+        <p class="s-text" style="margin-top:16px;">Начинаем с одного города — отрабатываем качество, систему и экономику. Следующий шаг — другие города Прибалтики.</p>
+
+        <div style="margin-top:40px;display:flex;flex-direction:column;gap:14px;">
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div class="feat-ico"><svg viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2"/></svg></div>
+            <span style="font-size:14px;color:var(--text-dim);">Стабильный городской спрос на такси</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div class="feat-ico"><svg viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2"/></svg></div>
+            <span style="font-size:14px;color:var(--text-dim);">Активное водительское сообщество</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div class="feat-ico"><svg viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2"/></svg></div>
+            <span style="font-size:14px;color:var(--text-dim);">Тестовая модель перед масштабированием</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div class="feat-ico"><svg viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2"/></svg></div>
+            <span style="font-size:14px;color:var(--text-dim);">Запуск в других городах Прибалтики</span>
           </div>
         </div>
       </div>
-
-      <ul class="features-list reveal reveal-delay-1">
-        <li>
-          <div class="feature-icon"><svg viewBox="0 0 10 10"><path d="M2 5l2.5 2.5L8 3"/></svg></div>
-          <div>Комиссия сервиса всего <strong>10%</strong> — оставляйте больше с каждой поездки</div>
-        </li>
-        <li>
-          <div class="feature-icon"><svg viewBox="0 0 10 10"><path d="M2 5l2.5 2.5L8 3"/></svg></div>
-          <div>Помощь с бухгалтерией и оформлением документов</div>
-        </li>
-        <li>
-          <div class="feature-icon"><svg viewBox="0 0 10 10"><path d="M2 5l2.5 2.5L8 3"/></svg></div>
-          <div>Консультации по легальной оптимизации расходов</div>
-        </li>
-        <li>
-          <div class="feature-icon"><svg viewBox="0 0 10 10"><path d="M2 5l2.5 2.5L8 3"/></svg></div>
-          <div>Поддержка при регистрации и начале работы в такси</div>
-        </li>
-        <li>
-          <div class="feature-icon"><svg viewBox="0 0 10 10"><path d="M2 5l2.5 2.5L8 3"/></svg></div>
-          <div>Снижение операционных расходов — мы помогаем оптимизировать издержки</div>
-        </li>
-        <li>
-          <div class="feature-icon"><svg viewBox="0 0 10 10"><path d="M2 5l2.5 2.5L8 3"/></svg></div>
-          <div>Аксессуары, стандарты комфорта и инструменты для повышения рейтинга</div>
-        </li>
-        <li>
-          <div class="feature-icon"><svg viewBox="0 0 10 10"><path d="M2 5l2.5 2.5L8 3"/></svg></div>
-          <div>Живая поддержка — не бот, а реальный человек</div>
-        </li>
-      </ul>
     </div>
   </div>
 </section>
 
-<!-- PASSENGERS -->
-<section id="passengers">
+<!-- ============ FAQ ============ -->
+<section style="background:var(--bg2);padding:100px 56px;" id="faq">
   <div class="container">
-    <p class="section-label reveal">Для пассажиров</p>
-    <h2 class="section-title reveal">Такси, в которое<br>приятно садиться</h2>
-    <p class="section-text reveal reveal-delay-1">Мы хотим вернуть такси статус удобного городского сервиса. Не просто из точки А в точку Б — а нормальный человеческий сервис каждый раз.</p>
-
-    <div class="comfort-cards">
-      <div class="comfort-card reveal">
-        <div class="comfort-num">01</div>
-        <div class="comfort-title">Вежливость</div>
-        <div class="comfort-text">Водитель приветствует пассажира. Уважительный тон, никакой грубости — это не пожелание, а стандарт.</div>
-      </div>
-      <div class="comfort-card reveal reveal-delay-1">
-        <div class="comfort-num">02</div>
-        <div class="comfort-title">Чистота</div>
-        <div class="comfort-text">Чистый салон, чистое авто снаружи. Никаких запахов, чистые коврики, порядок в машине.</div>
-      </div>
-      <div class="comfort-card reveal reveal-delay-2">
-        <div class="comfort-num">03</div>
-        <div class="comfort-title">Безопасность</div>
-        <div class="comfort-text">Аккуратное вождение, соблюдение ПДД. Вам должно быть комфортно и спокойно в пути.</div>
-      </div>
-      <div class="comfort-card reveal">
-        <div class="comfort-num">04</div>
-        <div class="comfort-title">Предсказуемость</div>
-        <div class="comfort-text">Понятные стандарты — вы знаете, что получите. Один и тот же уровень сервиса каждый раз.</div>
-      </div>
-      <div class="comfort-card reveal reveal-delay-1">
-        <div class="comfort-num">05</div>
-        <div class="comfort-title">Уровень Comfort+</div>
-        <div class="comfort-text">Вода, приятный аромат, подсветка, аккуратный интерьер и другие детали — для тех, кто хочет большего.</div>
-      </div>
-      <div class="comfort-card reveal reveal-delay-2">
-        <div class="comfort-num">06</div>
-        <div class="comfort-title">Забота о деталях</div>
-        <div class="comfort-text">Небольшие вещи имеют значение. Именно из деталей складывается ощущение качественного сервиса.</div>
-      </div>
+    <div style="text-align:center;margin-bottom:56px;">
+      <p class="s-label reveal" style="display:inline-block;">FAQ</p>
+      <h2 class="s-title reveal">Частые вопросы</h2>
     </div>
-  </div>
-</section>
-
-<!-- WHY DGV -->
-<section id="why-dgv">
-  <div class="container">
-    <div class="why-inner">
-      <div>
-        <p class="section-label reveal">Почему Даугавпилс</p>
-        <h2 class="section-title reveal">Правильный<br>город для старта</h2>
-        <p class="section-text reveal reveal-delay-1">Даугавпилс — идеальный рынок для запуска новой модели такси. Здесь есть стабильный спрос, активные водители и потребность в удобной локальной альтернативе крупным агрегаторам.</p>
-        <p class="section-text reveal reveal-delay-2" style="margin-top:16px;">Мы начинаем с одного города — чтобы отработать качество, систему и экономику. Следующий шаг — масштабирование в другие города Прибалтики.</p>
-      </div>
-      <div class="city-visual reveal reveal-delay-1">
-        <svg class="city-svg" viewBox="0 0 500 340" xmlns="http://www.w3.org/2000/svg">
-          <!-- Night city skyline SVG -->
-          <rect width="500" height="340" fill="#0d0f1a"/>
-          <!-- Stars -->
-          <circle cx="50" cy="40" r="1" fill="white" opacity="0.6"/>
-          <circle cx="120" cy="20" r="1.5" fill="white" opacity="0.4"/>
-          <circle cx="200" cy="50" r="1" fill="white" opacity="0.7"/>
-          <circle cx="300" cy="30" r="1" fill="white" opacity="0.5"/>
-          <circle cx="380" cy="60" r="1.5" fill="white" opacity="0.3"/>
-          <circle cx="450" cy="25" r="1" fill="white" opacity="0.6"/>
-          <circle cx="80" cy="80" r="0.8" fill="white" opacity="0.4"/>
-          <circle cx="250" cy="15" r="1" fill="white" opacity="0.5"/>
-          <circle cx="160" cy="70" r="0.8" fill="white" opacity="0.3"/>
-          <circle cx="420" cy="45" r="1" fill="white" opacity="0.5"/>
-          <!-- Buildings -->
-          <rect x="20" y="180" width="60" height="160" fill="#1a1d2e"/>
-          <rect x="90" y="140" width="50" height="200" fill="#13151f"/>
-          <rect x="150" y="160" width="80" height="180" fill="#1a1d2e"/>
-          <rect x="240" y="120" width="70" height="220" fill="#13151f"/>
-          <rect x="320" y="150" width="60" height="190" fill="#1a1d2e"/>
-          <rect x="390" y="130" width="90" height="210" fill="#13151f"/>
-          <!-- Windows -->
-          <rect x="30" y="190" width="12" height="8" fill="#f0c040" opacity="0.6"/>
-          <rect x="50" y="190" width="12" height="8" fill="#f0c040" opacity="0.3"/>
-          <rect x="30" y="210" width="12" height="8" fill="#f0c040" opacity="0.4"/>
-          <rect x="50" y="210" width="12" height="8" fill="#2a3d6b" opacity="0.8"/>
-          <rect x="100" y="155" width="10" height="7" fill="#f0c040" opacity="0.5"/>
-          <rect x="118" y="155" width="10" height="7" fill="#2a3d6b" opacity="0.9"/>
-          <rect x="100" y="170" width="10" height="7" fill="#f0c040" opacity="0.7"/>
-          <rect x="118" y="170" width="10" height="7" fill="#f0c040" opacity="0.3"/>
-          <rect x="100" y="185" width="10" height="7" fill="#2a3d6b" opacity="0.9"/>
-          <rect x="118" y="185" width="10" height="7" fill="#f0c040" opacity="0.6"/>
-          <rect x="160" y="175" width="14" height="9" fill="#f0c040" opacity="0.4"/>
-          <rect x="182" y="175" width="14" height="9" fill="#f0c040" opacity="0.7"/>
-          <rect x="204" y="175" width="14" height="9" fill="#2a3d6b" opacity="0.8"/>
-          <rect x="160" y="195" width="14" height="9" fill="#2a3d6b" opacity="0.9"/>
-          <rect x="182" y="195" width="14" height="9" fill="#f0c040" opacity="0.5"/>
-          <rect x="204" y="195" width="14" height="9" fill="#f0c040" opacity="0.3"/>
-          <rect x="250" y="135" width="12" height="8" fill="#f0c040" opacity="0.7"/>
-          <rect x="270" y="135" width="12" height="8" fill="#f0c040" opacity="0.4"/>
-          <rect x="290" y="135" width="12" height="8" fill="#2a3d6b" opacity="0.8"/>
-          <rect x="250" y="152" width="12" height="8" fill="#2a3d6b" opacity="0.9"/>
-          <rect x="270" y="152" width="12" height="8" fill="#f0c040" opacity="0.6"/>
-          <rect x="290" y="152" width="12" height="8" fill="#f0c040" opacity="0.3"/>
-          <rect x="250" y="169" width="12" height="8" fill="#f0c040" opacity="0.5"/>
-          <rect x="330" y="165" width="10" height="7" fill="#f0c040" opacity="0.5"/>
-          <rect x="348" y="165" width="10" height="7" fill="#2a3d6b" opacity="0.9"/>
-          <rect x="330" y="180" width="10" height="7" fill="#f0c040" opacity="0.3"/>
-          <rect x="348" y="180" width="10" height="7" fill="#f0c040" opacity="0.7"/>
-          <rect x="400" y="145" width="14" height="9" fill="#f0c040" opacity="0.6"/>
-          <rect x="422" y="145" width="14" height="9" fill="#f0c040" opacity="0.4"/>
-          <rect x="444" y="145" width="14" height="9" fill="#2a3d6b" opacity="0.8"/>
-          <rect x="400" y="163" width="14" height="9" fill="#2a3d6b" opacity="0.9"/>
-          <rect x="422" y="163" width="14" height="9" fill="#f0c040" opacity="0.7"/>
-          <!-- Road -->
-          <rect x="0" y="300" width="500" height="40" fill="#111318"/>
-          <rect x="0" y="296" width="500" height="4" fill="#1a1d2e"/>
-          <!-- Road markings -->
-          <rect x="60" y="313" width="30" height="3" fill="rgba(240,192,64,0.3)"/>
-          <rect x="140" y="313" width="30" height="3" fill="rgba(240,192,64,0.3)"/>
-          <rect x="220" y="313" width="30" height="3" fill="rgba(240,192,64,0.3)"/>
-          <rect x="300" y="313" width="30" height="3" fill="rgba(240,192,64,0.3)"/>
-          <rect x="380" y="313" width="30" height="3" fill="rgba(240,192,64,0.3)"/>
-          <!-- Car -->
-          <rect x="180" y="278" width="80" height="24" rx="4" fill="#f0c040"/>
-          <rect x="190" y="270" width="60" height="16" rx="3" fill="#f0c040" opacity="0.85"/>
-          <circle cx="200" cy="304" r="7" fill="#1a1d2e" stroke="#f0c040" stroke-width="2"/>
-          <circle cx="240" cy="304" r="7" fill="#1a1d2e" stroke="#f0c040" stroke-width="2"/>
-          <rect x="254" y="282" width="10" height="4" rx="1" fill="white" opacity="0.9"/>
-          <!-- Ground glow -->
-          <ellipse cx="220" cy="310" rx="100" ry="8" fill="rgba(240,192,64,0.08)"/>
-          <!-- Fog layer -->
-          <rect x="0" y="200" width="500" height="100" fill="url(#fog)" opacity="0.3"/>
-          <defs>
-            <linearGradient id="fog" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stop-color="transparent"/>
-              <stop offset="1" stop-color="#0d0f1a"/>
-            </linearGradient>
-          </defs>
-        </svg>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- MODEL -->
-<section id="model">
-  <div class="container">
-    <p class="section-label reveal">Наша модель</p>
-    <h2 class="section-title reveal">Мы зарабатываем<br>не только на комиссии</h2>
-
-    <div class="model-grid">
-      <div class="model-card featured reveal">
-        <div>
-          <div class="model-icon">⚡</div>
-          <div class="model-title">Экосистема, а не просто приложение</div>
-          <div class="model-text">Сервис строится как полноценная экосистема для водителей и пассажиров. Комиссия с поездок — только одно направление. Это позволяет нам делать комиссию ниже, а водителям — получать больше пользы от платформы.</div>
-        </div>
-        <div>
-          <div class="model-icon">💡</div>
-          <div class="model-title">Дополнительные сервисы</div>
-          <div class="model-text">Бухгалтерская поддержка, помощь с оформлением, консультации, стандарты качества, оборудование и аксессуары для автомобилей — всё, что помогает водителю работать лучше и зарабатывать больше.</div>
-        </div>
-      </div>
-      <div class="model-card reveal">
-        <div class="model-icon">📊</div>
-        <div class="model-title">Инструменты для роста</div>
-        <div class="model-text">Аналитика поездок, советы по оптимизации маршрутов, помощь в снижении издержек — данные, которые работают на вас.</div>
-      </div>
-      <div class="model-card reveal reveal-delay-1">
-        <div class="model-icon">🌍</div>
-        <div class="model-title">Масштабирование</div>
-        <div class="model-text">После отработки модели в Даугавпилсе — запуск в других городах Прибалтики. Локальная модель, которая масштабируется.</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- STANDARDS -->
-<section id="standards">
-  <div class="container">
-    <p class="section-label reveal">Стандарты качества</p>
-    <h2 class="section-title reveal">Новый стандарт<br>городского такси</h2>
-    <p class="section-text reveal reveal-delay-1">Не пожелания — а реальные требования к каждой поездке. Мы устанавливаем планку, и следим за тем, чтобы она соблюдалась.</p>
-
-    <div class="standards-list">
-      <div class="standard-item reveal">
-        <div class="std-num">01</div>
-        <div class="std-content">
-          <div class="std-title">Приветствие пассажира</div>
-          <div class="std-text">Водитель здоровается с каждым пассажиром. Это базовый минимум вежливости, который мы делаем стандартом.</div>
-        </div>
-      </div>
-      <div class="standard-item reveal reveal-delay-1">
-        <div class="std-num">02</div>
-        <div class="std-content">
-          <div class="std-title">Чистый автомобиль</div>
-          <div class="std-text">Чисто внутри и снаружи. Никаких запахов, чистые коврики, порядок в салоне перед каждой сменой.</div>
-        </div>
-      </div>
-      <div class="standard-item reveal">
-        <div class="std-num">03</div>
-        <div class="std-content">
-          <div class="std-title">Аккуратное вождение</div>
-          <div class="std-text">Без резких торможений, без агрессии на дороге. Пассажиру должно быть комфортно и безопасно.</div>
-        </div>
-      </div>
-      <div class="standard-item reveal reveal-delay-1">
-        <div class="std-num">04</div>
-        <div class="std-content">
-          <div class="std-title">Приятная атмосфера</div>
-          <div class="std-text">Нет неприятных запахов, нет раздражающей музыки, нет лишних разговоров — если пассажир не хочет.</div>
-        </div>
-      </div>
-      <div class="standard-item reveal">
-        <div class="std-num">05</div>
-        <div class="std-content">
-          <div class="std-title">Comfort+ категория</div>
-          <div class="std-text">Вода, жвачка, приятный аромат, подсветка, аккуратный внешний вид авто — для тех, кто хочет большего.</div>
-        </div>
-      </div>
-      <div class="standard-item reveal reveal-delay-1">
-        <div class="std-num">06</div>
-        <div class="std-content">
-          <div class="std-title">Соответствие стандартам</div>
-          <div class="std-text">Регулярная проверка качества. Рейтинг водителя — реальный инструмент, а не декоративный элемент.</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- HOW TO START -->
-<section id="start">
-  <div class="container">
-    <p class="section-label reveal">Как начать</p>
-    <h2 class="section-title reveal">Пять шагов<br>до первого заказа</h2>
-    <p class="section-text reveal reveal-delay-1">Мы сделали процесс подключения максимально простым. Помогаем на каждом этапе — от заявки до первого заказа.</p>
-
-    <div class="steps-row">
-      <div class="step reveal">
-        <div class="step-num">1</div>
-        <div class="step-title">Оставьте заявку</div>
-        <div class="step-text">Заполните форму на сайте. Это займёт 2 минуты.</div>
-      </div>
-      <div class="step reveal reveal-delay-1">
-        <div class="step-num">2</div>
-        <div class="step-title">Мы свяжемся с вами</div>
-        <div class="step-text">Звонок или сообщение — обсудим условия и ответим на вопросы.</div>
-      </div>
-      <div class="step reveal reveal-delay-2">
-        <div class="step-num">3</div>
-        <div class="step-title">Помощь с оформлением</div>
-        <div class="step-text">Помогаем с документами, регистрацией и всеми организационными вопросами.</div>
-      </div>
-      <div class="step reveal reveal-delay-3">
-        <div class="step-num">4</div>
-        <div class="step-title">Настройка профиля</div>
-        <div class="step-text">Настраиваем профиль, стандарты работы и инструменты для повышения дохода.</div>
-      </div>
-      <div class="step reveal reveal-delay-4">
-        <div class="step-num">5</div>
-        <div class="step-title">Получайте заказы</div>
-        <div class="step-text">Вы работаете — с комиссией 10% и полной поддержкой от нас.</div>
-      </div>
-    </div>
-
-    <div style="margin-top:60px; text-align:center;" class="reveal">
-      <a href="#form-section" class="btn-primary">Подать заявку водителя</a>
-    </div>
-  </div>
-</section>
-
-<!-- PASSENGERS CTA -->
-<section id="passengers-cta">
-  <div class="container" style="position:relative;z-index:1;">
-    <p class="section-label reveal" style="text-align:center;justify-content:center;display:flex;">Для пассажиров</p>
-    <h2 class="section-title reveal" style="text-align:center;max-width:600px;margin:0 auto 24px;">Такси, где комфорт<br>снова <em style="font-style:italic;">имеет значение</em></h2>
-    <p class="section-text reveal reveal-delay-1" style="text-align:center;max-width:480px;margin:0 auto 48px;">Сервис готовится к запуску в Даугавпилсе. Оставьте контакт — мы пришлём уведомление о старте и бонус на первую поездку.</p>
-    <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;" class="reveal reveal-delay-2">
-      <a href="#form-section" class="btn-primary">Получить уведомление о запуске</a>
-    </div>
-  </div>
-</section>
-
-<!-- FAQ -->
-<section id="faq">
-  <div class="container">
-    <p class="section-label reveal" style="text-align:center;display:flex;justify-content:center;">Часто задаваемые вопросы</p>
-    <h2 class="section-title reveal" style="text-align:center;">Ответы на<br>главные вопросы</h2>
-
-    <div class="faq-list">
-      <div class="faq-item">
-        <button class="faq-q" onclick="toggleFaq(this)">
+    <div style="max-width:720px;margin:0 auto;" class="reveal">
+      <div class="faq-item" style="border-bottom:1px solid var(--border);">
+        <button class="faq-q" onclick="faq(this)" style="width:100%;background:none;border:none;text-align:left;padding:24px 0;font-family:Inter,sans-serif;font-size:15px;font-weight:500;color:var(--text);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:20px;transition:color .25s;">
           Какая комиссия для водителей?
-          <div class="faq-chevron">
+          <span class="faq-ic" style="width:22px;height:22px;border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .3s;">
             <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M4 1v6M1 4h6" stroke="currentColor" stroke-width="1.5"/></svg>
-          </div>
+          </span>
         </button>
-        <div class="faq-a"><div class="faq-a-inner">Комиссия сервиса — <strong>10%</strong>. Это значительно ниже, чем у крупных агрегаторов, что позволяет водителям оставлять себе больше с каждой поездки.</div></div>
+        <div class="faq-body" style="max-height:0;overflow:hidden;transition:max-height .4s ease;">
+          <p style="font-size:14px;color:var(--text-dim);padding-bottom:20px;line-height:1.75;font-weight:300;">Комиссия сервиса — <strong style="color:var(--text);">10%</strong>. Значительно ниже, чем у крупных агрегаторов — водители оставляют себе намного больше с каждой поездки.</p>
+        </div>
       </div>
-      <div class="faq-item">
-        <button class="faq-q" onclick="toggleFaq(this)">
+      <div class="faq-item" style="border-bottom:1px solid var(--border);">
+        <button class="faq-q" onclick="faq(this)" style="width:100%;background:none;border:none;text-align:left;padding:24px 0;font-family:Inter,sans-serif;font-size:15px;font-weight:500;color:var(--text);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:20px;transition:color .25s;">
           Помогаете ли вы с бухгалтерией?
-          <div class="faq-chevron">
+          <span class="faq-ic" style="width:22px;height:22px;border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .3s;">
             <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M4 1v6M1 4h6" stroke="currentColor" stroke-width="1.5"/></svg>
-          </div>
+          </span>
         </button>
-        <div class="faq-a"><div class="faq-a-inner">Да, мы предоставляем водителям поддержку и консультации по вопросам оформления, бухгалтерии и легальной оптимизации расходов. Наша задача — помочь вам работать эффективнее и с минимальными издержками.</div></div>
+        <div class="faq-body" style="max-height:0;overflow:hidden;transition:max-height .4s ease;">
+          <p style="font-size:14px;color:var(--text-dim);padding-bottom:20px;line-height:1.75;font-weight:300;">Да. Предоставляем поддержку и консультации по оформлению, бухгалтерии и легальной оптимизации расходов. Цель — помочь вам работать эффективнее и с минимальными издержками.</p>
+        </div>
       </div>
-      <div class="faq-item">
-        <button class="faq-q" onclick="toggleFaq(this)">
+      <div class="faq-item" style="border-bottom:1px solid var(--border);">
+        <button class="faq-q" onclick="faq(this)" style="width:100%;background:none;border:none;text-align:left;padding:24px 0;font-family:Inter,sans-serif;font-size:15px;font-weight:500;color:var(--text);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:20px;transition:color .25s;">
           Можно ли подключиться, если я уже работаю в такси?
-          <div class="faq-chevron">
+          <span class="faq-ic" style="width:22px;height:22px;border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .3s;">
             <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M4 1v6M1 4h6" stroke="currentColor" stroke-width="1.5"/></svg>
-          </div>
+          </span>
         </button>
-        <div class="faq-a"><div class="faq-a-inner">Да, вы можете оставить заявку, и мы обсудим условия подключения. Опыт работы в такси — преимущество, не требование.</div></div>
+        <div class="faq-body" style="max-height:0;overflow:hidden;transition:max-height .4s ease;">
+          <p style="font-size:14px;color:var(--text-dim);padding-bottom:20px;line-height:1.75;font-weight:300;">Да, оставьте заявку — обсудим условия подключения. Опыт работы в такси — преимущество, не требование.</p>
+        </div>
       </div>
-      <div class="faq-item">
-        <button class="faq-q" onclick="toggleFaq(this)">
+      <div class="faq-item" style="border-bottom:1px solid var(--border);">
+        <button class="faq-q" onclick="faq(this)" style="width:100%;background:none;border:none;text-align:left;padding:24px 0;font-family:Inter,sans-serif;font-size:15px;font-weight:500;color:var(--text);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:20px;transition:color .25s;">
           Когда сервис запустится?
-          <div class="faq-chevron">
+          <span class="faq-ic" style="width:22px;height:22px;border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .3s;">
             <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M4 1v6M1 4h6" stroke="currentColor" stroke-width="1.5"/></svg>
-          </div>
+          </span>
         </button>
-        <div class="faq-a"><div class="faq-a-inner">Сейчас мы формируем базу водителей и пассажиров в Даугавпилсе. После набора необходимого количества участников будет объявлена дата запуска. Оставьте заявку — вы будете первым.</div></div>
+        <div class="faq-body" style="max-height:0;overflow:hidden;transition:max-height .4s ease;">
+          <p style="font-size:14px;color:var(--text-dim);padding-bottom:20px;line-height:1.75;font-weight:300;">Сейчас формируем базу водителей и пассажиров. После набора нужного количества участников объявим дату запуска. Оставьте заявку — будете первым.</p>
+        </div>
       </div>
-      <div class="faq-item">
-        <button class="faq-q" onclick="toggleFaq(this)">
+      <div class="faq-item" style="border-bottom:1px solid var(--border);">
+        <button class="faq-q" onclick="faq(this)" style="width:100%;background:none;border:none;text-align:left;padding:24px 0;font-family:Inter,sans-serif;font-size:15px;font-weight:500;color:var(--text);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:20px;transition:color .25s;">
           Будет ли приложение?
-          <div class="faq-chevron">
+          <span class="faq-ic" style="width:22px;height:22px;border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .3s;">
             <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M4 1v6M1 4h6" stroke="currentColor" stroke-width="1.5"/></svg>
-          </div>
+          </span>
         </button>
-        <div class="faq-a"><div class="faq-a-inner">Да, модель предполагает приложение и удобную цифровую систему для заказа поездок и работы водителей. Подробности о приложении будут объявлены ближе к запуску.</div></div>
-      </div>
-      <div class="faq-item">
-        <button class="faq-q" onclick="toggleFaq(this)">
-          Нужен ли собственный автомобиль?
-          <div class="faq-chevron">
-            <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M4 1v6M1 4h6" stroke="currentColor" stroke-width="1.5"/></svg>
-          </div>
-        </button>
-        <div class="faq-a"><div class="faq-a-inner">Укажите это в заявке — мы рассматриваем все варианты. Также можем помочь с консультацией по аренде или приобретению автомобиля для работы в такси.</div></div>
+        <div class="faq-body" style="max-height:0;overflow:hidden;transition:max-height .4s ease;">
+          <p style="font-size:14px;color:var(--text-dim);padding-bottom:20px;line-height:1.75;font-weight:300;">Да, модель предполагает приложение и удобную цифровую систему для заказа поездок и работы водителей. Подробности — ближе к запуску.</p>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- FORM -->
-<section id="form-section">
+<!-- ============ FORM ============ -->
+<section id="form-sec">
   <div class="container">
     <div class="form-grid">
-      <div class="form-desc">
-        <p class="section-label reveal">Подать заявку</p>
-        <h2 class="section-title reveal">Присоединяйтесь<br>к VELO</h2>
-        <p class="section-text reveal reveal-delay-1">Заполните форму — мы свяжемся с вами и расскажем всё о возможностях. Без обязательств, просто разговор.</p>
-
-        <div style="margin-top:40px; display:flex; flex-direction:column; gap:20px;" class="reveal reveal-delay-2">
-          <div style="display:flex;align-items:center;gap:16px;">
-            <div class="feature-icon"><svg viewBox="0 0 10 10" fill="var(--gold)"><circle cx="5" cy="5" r="4"/></svg></div>
-            <span style="font-size:14px;color:var(--text-dim);">Ответим в течение 24 часов</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:16px;">
-            <div class="feature-icon"><svg viewBox="0 0 10 10" fill="var(--gold)"><circle cx="5" cy="5" r="4"/></svg></div>
-            <span style="font-size:14px;color:var(--text-dim);">Никакого спама, только по делу</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:16px;">
-            <div class="feature-icon"><svg viewBox="0 0 10 10" fill="var(--gold)"><circle cx="5" cy="5" r="4"/></svg></div>
-            <span style="font-size:14px;color:var(--text-dim);">Первым — специальные условия</span>
-          </div>
+      <div class="reveal-left">
+        <p class="s-label">Подать заявку</p>
+        <h2 class="s-title">Присоединяйтесь<br>к <span style="color:var(--gold);">A2B Taxi</span></h2>
+        <p class="s-text">Заполните форму — свяжемся и расскажем о всех возможностях. Без обязательств.</p>
+        <div class="form-promise">
+          <div class="form-promise-item"><div class="feat-ico"><svg viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2"/></svg></div>Ответим в течение 24 часов</div>
+          <div class="form-promise-item"><div class="feat-ico"><svg viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2"/></svg></div>Никакого спама — только по делу</div>
+          <div class="form-promise-item"><div class="feat-ico"><svg viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2"/></svg></div>Первым — специальные условия подключения</div>
         </div>
       </div>
-
-      <div class="form-el reveal reveal-delay-1">
+      <div class="form-wrap reveal-right">
         <div class="form-row">
-          <input type="text" id="fname" placeholder="Ваше имя" required>
-          <input type="tel" id="fphone" placeholder="Телефон" required>
+          <div class="form-field">
+            <input type="text" id="fn" placeholder=" " required>
+            <label>Ваше имя</label>
+          </div>
+          <div class="form-field">
+            <input type="tel" id="fp" placeholder=" " required>
+            <label>Телефон</label>
+          </div>
         </div>
-        <select id="ftype">
-          <option value="" disabled selected>Я — водитель / пассажир / партнёр</option>
-          <option value="driver">Я водитель — хочу работать</option>
-          <option value="driver-new">Хочу начать работать в такси</option>
-          <option value="passenger">Я пассажир — жду запуска</option>
-          <option value="partner">Партнёр / инвестор</option>
-        </select>
-        <select id="fcar">
-          <option value="" disabled selected>Есть ли автомобиль?</option>
-          <option value="yes-own">Да, собственный</option>
-          <option value="yes-lease">Да, в аренде</option>
-          <option value="no">Нет автомобиля</option>
-          <option value="na">Не применимо (пассажир / партнёр)</option>
-        </select>
-        <textarea id="fcomment" placeholder="Комментарий (опционально)"></textarea>
-        <div class="success-msg" id="success-msg">✓ Заявка отправлена! Свяжемся с вами в ближайшее время.</div>
-        <button class="btn-primary" onclick="submitForm()" style="width:100%;padding:18px;">Отправить заявку</button>
-        <p style="font-size:12px;color:var(--text-muted);text-align:center;">Нажимая кнопку, вы соглашаетесь с обработкой персональных данных</p>
+        <div class="form-field">
+          <select id="ft">
+            <option value="" disabled selected>Я — водитель / пассажир / партнёр</option>
+            <option>Я водитель — хочу работать</option>
+            <option>Хочу начать работать в такси</option>
+            <option>Я пассажир — жду запуска</option>
+            <option>Партнёр / инвестор</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <select id="fc">
+            <option value="" disabled selected>Есть ли автомобиль?</option>
+            <option>Да, собственный</option>
+            <option>Да, в аренде</option>
+            <option>Нет автомобиля</option>
+            <option>Не применимо</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <textarea id="fm" placeholder="Комментарий (опционально)"></textarea>
+        </div>
+        <div class="success-banner" id="ok">✓ Заявка отправлена! Свяжемся с вами в ближайшее время.</div>
+        <button class="btn-gold" onclick="sub()" style="width:100%;padding:18px;font-size:14px;">Отправить заявку</button>
+        <p style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:4px;">Нажимая кнопку, вы соглашаетесь с обработкой персональных данных</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- FINAL CTA -->
-<section id="final-cta">
-  <div class="container">
-    <h2 class="section-title reveal">Станьте частью<br><em>нового такси</em></h2>
-    <p class="section-text reveal reveal-delay-1">Мы создаём сервис, где водителям выгоднее работать, а пассажирам приятнее ездить. Даугавпилс — первый. Вы — первые.</p>
-    <div class="hero-actions reveal reveal-delay-2">
-      <a href="#form-section" class="btn-primary">Стать водителем</a>
-      <a href="#passengers-cta" class="btn-outline">Следить за запуском</a>
+<!-- ============ FINAL CTA ============ -->
+<section id="final">
+  <div class="final-inner reveal">
+    <h2 class="final-title">
+      Станьте частью<br>
+      <span class="gold">нового такси</span><br>
+      Даугавпилса
+    </h2>
+    <p class="final-sub">Мы создаём сервис, где водителям выгоднее работать, а пассажирам приятнее ездить. Вы — первые.</p>
+    <div class="final-actions">
+      <a href="#form-sec" class="btn-gold">Стать водителем</a>
+      <a href="#form-sec" class="btn-ghost">Следить за запуском</a>
     </div>
   </div>
 </section>
 
-<!-- FOOTER -->
+<!-- ============ FOOTER ============ -->
 <footer>
-  <div class="footer-logo">VELO</div>
-  <div class="footer-text">© 2025 VELO. Локальное такси в Даугавпилсе.<br>Новый стандарт городского сервиса.</div>
-  <div class="footer-text" style="text-align:right;">Даугавпилс, Латвия<br>info@velo-taxi.lv</div>
+  <svg viewBox="0 0 200 44" height="34" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="fg" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#e8ca60"/>
+        <stop offset="100%" stop-color="#b8941e"/>
+      </linearGradient>
+      <linearGradient id="fn2" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#3a4f8a"/>
+        <stop offset="100%" stop-color="#0c1630"/>
+      </linearGradient>
+    </defs>
+    <text x="0" y="36" font-family="Bebas Neue,sans-serif" font-size="40" fill="url(#fn2)">A</text>
+    <text x="28" y="36" font-family="Bebas Neue,sans-serif" font-size="40" fill="url(#fg)">2</text>
+    <text x="54" y="36" font-family="Bebas Neue,sans-serif" font-size="40" fill="url(#fn2)">B</text>
+    <rect x="86" y="3" width="10" height="7" rx="1" fill="url(#fg)" opacity=".9"/>
+    <rect x="98" y="3" width="10" height="7" rx="1" fill="url(#fn2)" opacity=".9"/>
+    <rect x="110" y="3" width="10" height="7" rx="1" fill="url(#fg)" opacity=".5"/>
+    <rect x="86" y="12" width="10" height="7" rx="1" fill="url(#fn2)" opacity=".9"/>
+    <rect x="98" y="12" width="10" height="7" rx="1" fill="url(#fg)" opacity=".9"/>
+    <rect x="110" y="12" width="10" height="7" rx="1" fill="url(#fn2)" opacity=".5"/>
+    <path d="M2 42 Q64 52 122 36" stroke="url(#fg)" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <text x="88" y="40" font-family="Bebas Neue,sans-serif" font-size="13" letter-spacing="3" fill="url(#fn2)">TAXI</text>
+  </svg>
+  <div class="footer-copy">© 2025 A2B Taxi · Локальное такси в Даугавпилсе<br>Новый стандарт городского сервиса</div>
+  <div class="footer-contact">Даугавпилс, Латвия<br>info@a2btaxi.lv</div>
 </footer>
 
+<!-- ============ SCRIPTS ============ -->
 <script>
-  // Reveal on scroll
-  const reveals = document.querySelectorAll('.reveal');
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        e.target.classList.add('visible');
-      }
-    });
-  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
-  reveals.forEach(r => observer.observe(r));
+// ---- HERO ANIMATIONS ----
+window.addEventListener('load',()=>{
+  document.getElementById('heroPhoto').classList.add('loaded');
+  setTimeout(()=>document.getElementById('heroBadge').classList.add('show'),200);
+  setTimeout(()=>document.getElementById('hl1').classList.add('show'),300);
+  setTimeout(()=>document.getElementById('hl2').classList.add('show'),480);
+  setTimeout(()=>document.getElementById('hl3').classList.add('show'),640);
+  setTimeout(()=>document.getElementById('heroSub').classList.add('show'),750);
+  setTimeout(()=>document.getElementById('heroActions').classList.add('show'),900);
+  setTimeout(()=>document.getElementById('heroStats').classList.add('show'),1000);
+});
 
-  // Trigger hero reveals immediately
-  setTimeout(() => {
-    document.querySelectorAll('#hero .reveal').forEach(el => el.classList.add('visible'));
-  }, 100);
+// ---- NAV SCROLL ----
+window.addEventListener('scroll',()=>{
+  document.getElementById('nav').classList.toggle('scrolled',window.scrollY>40);
+});
 
-  // FAQ toggle
-  function toggleFaq(btn) {
-    const item = btn.parentElement;
-    const isOpen = item.classList.contains('open');
-    document.querySelectorAll('.faq-item.open').forEach(el => el.classList.remove('open'));
-    if (!isOpen) item.classList.add('open');
-  }
-
-  // Form submit
-  function submitForm() {
-    const name = document.getElementById('fname').value.trim();
-    const phone = document.getElementById('fphone').value.trim();
-    const type = document.getElementById('ftype').value;
-
-    if (!name || !phone || !type) {
-      alert('Пожалуйста, заполните обязательные поля: имя, телефон и тип участника.');
-      return;
-    }
-
-    document.getElementById('success-msg').style.display = 'block';
-    document.getElementById('fname').value = '';
-    document.getElementById('fphone').value = '';
-    document.getElementById('fcomment').value = '';
-    document.getElementById('ftype').selectedIndex = 0;
-    document.getElementById('fcar').selectedIndex = 0;
-  }
-
-  // Nav scroll effect
-  window.addEventListener('scroll', () => {
-    const nav = document.querySelector('nav');
-    if (window.scrollY > 60) {
-      nav.style.background = 'rgba(10,11,15,0.97)';
-      nav.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
-    } else {
-      nav.style.background = '';
-      nav.style.borderBottom = '';
+// ---- INTERSECTION OBSERVER ----
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.classList.add('vis');
+      // bars
+      e.target.querySelectorAll('.bar-fill').forEach(b=>{
+        b.style.width=b.dataset.width+'%';
+      });
+      // count-up
+      e.target.querySelectorAll('[data-count]').forEach(el=>{
+        countUp(el);
+      });
     }
   });
+},{threshold:0.1,rootMargin:'0px 0px -40px 0px'});
 
-  // Mobile menu (basic)
-  document.querySelector('.mobile-menu-btn').addEventListener('click', () => {
-    const nl = document.querySelector('.nav-links');
-    if (nl.style.display === 'flex') {
-      nl.style.display = 'none';
-    } else {
-      nl.style.display = 'flex';
-      nl.style.flexDirection = 'column';
-      nl.style.position = 'absolute';
-      nl.style.top = '64px';
-      nl.style.left = '0'; nl.style.right = '0';
-      nl.style.background = 'rgba(10,11,15,0.98)';
-      nl.style.padding = '20px 40px 30px';
-      nl.style.gap = '20px';
-      nl.style.borderBottom = '1px solid rgba(255,255,255,0.06)';
-    }
+document.querySelectorAll('.reveal,.reveal-left,.reveal-right').forEach(el=>obs.observe(el));
+
+// also observe stat boxes individually
+document.querySelectorAll('.stat-box').forEach(el=>obs.observe(el));
+document.querySelectorAll('.bar-fill').forEach(b=>{
+  const wrap=b.closest('.drivers-grid');
+  if(wrap) obs.observe(wrap);
+});
+
+// ---- COUNT UP ----
+function countUp(el){
+  const target=+el.dataset.count;
+  const suffix=el.dataset.suffix||'';
+  const dur=1200;
+  const start=performance.now();
+  function step(now){
+    const p=Math.min((now-start)/dur,1);
+    const val=Math.round(p*target);
+    el.textContent=val+suffix;
+    if(p<1)requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+// ---- FAQ ----
+function faq(btn){
+  const item=btn.parentElement;
+  const body=item.querySelector('.faq-body');
+  const ic=btn.querySelector('.faq-ic');
+  const isOpen=body.style.maxHeight&&body.style.maxHeight!=='0px';
+  document.querySelectorAll('.faq-body').forEach(b=>b.style.maxHeight='0px');
+  document.querySelectorAll('.faq-ic').forEach(i=>{
+    i.style.background='';i.style.borderColor='rgba(255,255,255,0.07)';
+    i.style.transform='';
   });
+  if(!isOpen){
+    body.style.maxHeight='200px';
+    ic.style.background='var(--gold)';
+    ic.style.borderColor='var(--gold)';
+    ic.style.transform='rotate(45deg)';
+  }
+}
+
+// ---- FORM ----
+function sub(){
+  const n=document.getElementById('fn').value.trim();
+  const p=document.getElementById('fp').value.trim();
+  const t=document.getElementById('ft').value;
+  if(!n||!p||!t){alert('Заполните: имя, телефон и тип участника.');return;}
+  document.getElementById('ok').style.display='block';
+  document.getElementById('fn').value='';
+  document.getElementById('fp').value='';
+  document.getElementById('fm').value='';
+  document.getElementById('ft').selectedIndex=0;
+  document.getElementById('fc').selectedIndex=0;
+}
+
+// ---- MOBILE MENU ----
+function toggleMob(){
+  const nl=document.querySelector('.nav-links');
+  if(nl.style.display==='flex'){nl.style.display='none';}
+  else{
+    nl.style.cssText='display:flex;flex-direction:column;position:absolute;top:72px;left:0;right:0;background:rgba(6,8,15,.98);padding:20px 40px 28px;gap:20px;border-bottom:1px solid rgba(255,255,255,.06);';
+  }
+}
 </script>
 </body>
 </html>
